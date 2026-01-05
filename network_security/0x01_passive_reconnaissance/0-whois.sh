@@ -1,2 +1,2 @@
 #!/bin/bash
-whois "$1" | awk -F: '/^(Registrant|Admin|Tech)/{s=$1} /:/{gsub(/^[ \t]+/,"",$2); if($1~/(Street)/) printf "%s %s,%s \n",s,$1,$2; el e if($1~/(Phone Ext)/) printf "%s %s:, %s\n",s,$1,$2; else printf "%s %s,%s\n",s,$1,$2}' > "$1.csv"
+whois $1|awk -F': *' '/^(Registrant|Admin|Tech)/{k=$1;v=$2;if(k~/ Ext$/)k=k":";print (v==""?k", ":k", "v)}' > $1.csv
