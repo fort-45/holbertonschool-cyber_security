@@ -1,2 +1,2 @@
 #!/bin/bash
-hashcat -a 1 "$1" "$1" --stdout
+hashcat -a 1 "$1" "$2" --stdout
