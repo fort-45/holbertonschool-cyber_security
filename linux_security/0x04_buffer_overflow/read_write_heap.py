@@ -36,10 +36,8 @@ def replace_in_heap(pid, heap_start, heap_end, search, replace):
             print("String not found in heap")
             sys.exit(1)
 
-        print("Found '{}' at offset {}".format(search, offset))
         f.seek(heap_start + offset)
         f.write(replace)
-        print("Replaced with '{}'".format(replace))
 
 
 def main():
@@ -58,10 +56,9 @@ def main():
         print("Heap not found")
         sys.exit(1)
 
-    print("Heap: 0x{:x} - 0x{:x}".format(heap_start, heap_end))
     replace_in_heap(pid, heap_start, heap_end, search, replace)
+    print("SUCCESS!")
 
 
 if __name__ == "__main__":
     main()
-
