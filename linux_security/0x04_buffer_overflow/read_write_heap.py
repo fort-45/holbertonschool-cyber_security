@@ -6,12 +6,12 @@ and replaces it with another string.
 """
 
 import sys
-import os
 
 
 def get_heap_info(pid):
     """
     Parses the maps file to find the heap memory range for a given process.
+    Checks if the heap is writable.
 
     Args:
         pid (int): The process ID.
@@ -24,18 +24,21 @@ def get_heap_info(pid):
         with open(maps_path, 'r') as f:
             for line in f:
                 if "[heap]" in line:
-                    addr = line.split()[0]
+                    parts = line.split()
+                    # Check for 'w' in permissions (parts[1])
+                    if 'w' not in parts[1]:
+                        return None, None
+                    addr = parts[0]
                     start, end = addr.split("-")
                     return int(start, 16), int(end, 16)
     except (FileNotFoundError, PermissionError):
-        print("Error: Could not access /proc/{}/maps".format(pid))
-        sys.exit(1)
+        return None, None
     return None, None
 
 
 def replace_string(pid, search_str, replace_str):
     """
-    Searches for a string in the heap and replaces it.
+    Searches for a string in the heap and replaces it with padding.
 
     Args:
         pid (int): The process ID.
@@ -44,7 +47,7 @@ def replace_string(pid, search_str, replace_str):
     """
     start, end = get_heap_info(pid)
     if start is None:
-        print("Error: Could not find [heap] in /proc/{}/maps".format(pid))
+        # Silently fail or exit as per requirement
         sys.exit(1)
 
     mem_path = "/proc/{}/mem".format(pid)
@@ -56,16 +59,18 @@ def replace_string(pid, search_str, replace_str):
             index = data.find(search_bytes)
 
             if index == -1:
-                print("Error: String '{}' not found in heap".format(search_str))
                 sys.exit(1)
 
-            # Move to the position of the string found
+            # Pad the replacement string with null bytes if it's shorter
+            # to ensure the old string is fully overwritten
+            replace_bytes = replace_str.encode("ascii")
+            payload = replace_bytes.ljust(len(search_bytes), b'\x00')
+
             f.seek(start + index)
-            f.write(replace_str.encode("ascii"))
+            f.write(payload)
             print("SUCCESS!")
 
     except (FileNotFoundError, PermissionError):
-        print("Error: Could not access /proc/{}/mem".format(pid))
         sys.exit(1)
 
 
@@ -84,5 +89,4 @@ if __name__ == "__main__":
         replace_str = sys.argv[3]
         replace_string(pid, search_str, replace_str)
     except ValueError:
-        print("Error: PID must be an integer")
         sys.exit(1)
