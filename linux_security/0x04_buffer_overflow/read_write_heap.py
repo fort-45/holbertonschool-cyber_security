@@ -1,47 +1,57 @@
 #!/usr/bin/python3
 """
-Module to find and replace a string in the heap of a running process.
+Module to find and replace a string in the heap of a running process
+using the /proc filesystem.
 """
 import sys
 
 
 def find_heap(pid):
     """Read /proc/pid/maps and return heap start and end addresses."""
-    maps_file = "/proc/{}/maps".format(pid)
     heap_start = None
     heap_end = None
 
-    with open(maps_file, 'r') as f:
-        for line in f:
-            if '[heap]' in line:
-                parts = line.split()
-                addrs = parts[0].split('-')
-                heap_start = int(addrs[0], 16)
-                heap_end = int(addrs[1], 16)
-                break
+    try:
+        with open(f"/proc/{pid}/maps", "r", encoding="utf-8") as f:
+            for line in f:
+                if '[heap]' in line:
+                    parts = line.split()
+                    addrs = parts[0].split('-')
+                    heap_start = int(addrs[0], 16)
+                    heap_end = int(addrs[1], 16)
+                    break
+    except FileNotFoundError:
+        print(f"[!] Error: Process {pid} does not exist.")
+        sys.exit(1)
+    except PermissionError:
+        print("[!] Access Denied: Run with sudo.")
+        sys.exit(1)
 
     return heap_start, heap_end
 
 
 def replace_in_heap(pid, heap_start, heap_end, search, replace):
-    """Find search string in heap and replace it with replace string."""
-    mem_file = "/proc/{}/mem".format(pid)
+    """Find search bytes in heap and replace with replace bytes."""
+    try:
+        with open(f"/proc/{pid}/mem", "r+b") as f:
+            f.seek(heap_start)
+            heap_data = f.read(heap_end - heap_start)
 
-    with open(mem_file, 'rb+') as f:
-        f.seek(heap_start)
-        heap_data = f.read(heap_end - heap_start)
+            offset = heap_data.find(search)
+            if offset == -1:
+                print("String not found in heap")
+                sys.exit(1)
 
-        offset = heap_data.find(search)
-        if offset == -1:
-            print("String not found in heap")
-            sys.exit(1)
-
-        f.seek(heap_start + offset)
-        f.write(replace)
+            payload = replace.ljust(len(search), b'\x00')
+            f.seek(heap_start + offset)
+            f.write(payload)
+    except PermissionError:
+        print("[!] Access Denied: Run with sudo.")
+        sys.exit(1)
 
 
 def main():
-    """Entry point. Parse arguments and call heap functions."""
+    """Entry point. Parse arguments and manipulate heap."""
     if len(sys.argv) != 4:
         print("Usage: read_write_heap.py pid search_string replace_string")
         sys.exit(1)
