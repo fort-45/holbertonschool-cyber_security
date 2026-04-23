@@ -60,7 +60,6 @@ def main():
                 sys.exit(1)
 
         heap_start, heap_end, addr_str = heap_info
-        print(f"[*] Found [heap] at: {addr_str}")
 
         # 4. ACCESSING /proc/[PID]/mem
         with open(f"/proc/{pid}/mem", "r+b") as mem_file:
@@ -74,7 +73,6 @@ def main():
                 sys.exit(1)
 
             actual_addr = heap_start + offset
-            print(f"[*] Found '{search_str}' at: {hex(actual_addr)}")
 
             # Pad with Null Bytes if the replacement is shorter
             payload = replace_bytes.ljust(len(search_bytes), b'\x00')
