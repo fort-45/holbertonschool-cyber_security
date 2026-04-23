@@ -62,8 +62,7 @@ def replace_string(pid, search_str, replace_str):
             # Move to the position of the string found
             f.seek(start + index)
             f.write(replace_str.encode("ascii"))
-            print("Successfully replaced '{}' with '{}' at 0x{:x}".format(
-                search_str, replace_str, start + index))
+            print("SUCCESS!") 
 
     except (FileNotFoundError, PermissionError):
         print("Error: Could not access /proc/{}/mem".format(pid))
