@@ -81,7 +81,6 @@ def main():
 
             mem_file.seek(actual_addr)
             mem_file.write(payload)
-            print(f"[*] Successfully wrote '{replace_str}' to memory.")
 
     except PermissionError:
         print("[!] Access Denied: You MUST run this script with 'sudo'.")
